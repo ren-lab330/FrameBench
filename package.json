@@ -1,0 +1,89 @@
+{
+  "name": "framebench",
+  "version": "0.1.0",
+  "description": "Local camera capture and labeling tool for coding agents working on hardware.",
+  "main": "dist/main/app/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "icons": "node scripts/generate-icons.mjs",
+    "build": "tsc -p tsconfig.main.json && node scripts/copy-preload.mjs && vite build",
+    "start": "electron .",
+    "test": "node scripts/run-tests.mjs",
+    "release:check": "node scripts/generate-icons.mjs && tsc -p tsconfig.main.json && node scripts/copy-preload.mjs && vite build && node scripts/run-tests.mjs",
+    "package": "node scripts/generate-icons.mjs && tsc -p tsconfig.main.json && node scripts/copy-preload.mjs && vite build && electron-builder --dir",
+    "dist": "node scripts/generate-icons.mjs && tsc -p tsconfig.main.json && node scripts/copy-preload.mjs && vite build && electron-builder",
+    "dist:mac": "node scripts/generate-icons.mjs && tsc -p tsconfig.main.json && node scripts/copy-preload.mjs && vite build && electron-builder --mac",
+    "dist:win": "node scripts/generate-icons.mjs && tsc -p tsconfig.main.json && node scripts/copy-preload.mjs && vite build && electron-builder --win",
+    "dist:linux": "node scripts/generate-icons.mjs && tsc -p tsconfig.main.json && node scripts/copy-preload.mjs && vite build && electron-builder --linux"
+  },
+  "keywords": [
+    "electron",
+    "hardware",
+    "camera",
+    "agent"
+  ],
+  "bin": {
+    "framebench": "./bin/framebench"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.5.2",
+    "electron-is-dev": "^3.0.1",
+    "lucide-react": "^0.468.0",
+    "vite": "^5.4.19",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3",
+    "typescript": "^5.8.3"
+  },
+  "build": {
+    "appId": "app.framebench.desktop",
+    "productName": "FrameBench",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "icon": "build/icon",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "mac": {
+      "icon": "build/icon.icns",
+      "entitlements": "resources/entitlements.mac.plist",
+      "entitlementsInherit": "resources/entitlements.mac.plist",
+      "extendInfo": {
+        "NSCameraUsageDescription": "FrameBench uses the camera to capture hardware bench images, label crops, and burst samples for local inspection."
+      },
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development"
+    }
+  }
+}

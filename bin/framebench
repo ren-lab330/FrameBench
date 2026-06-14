@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+APP_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+BUNDLED_NODE="/Users/renaudvarin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+
+if [ -x "$BUNDLED_NODE" ]; then
+  exec "$BUNDLED_NODE" "$APP_DIR/cli/framebench.mjs" "$@"
+fi
+
+if command -v node >/dev/null 2>&1; then
+  exec node "$APP_DIR/cli/framebench.mjs" "$@"
+fi
+
+echo "FrameBench CLI requires Node.js. Install Node or run with the bundled Codex Node runtime." >&2
+exit 127

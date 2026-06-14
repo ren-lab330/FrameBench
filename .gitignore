@@ -1,0 +1,9 @@
+node_modules/
+build/
+dist/
+release/
+.DS_Store
+**/.DS_Store
+.framebench/
+crash_report*.md
+npm-debug.log*

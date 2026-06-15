@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld("framebench", {
   listCaptures: () => ipcRenderer.invoke("captures:list"),
   saveCaptureNotes: (captureId, notes) => ipcRenderer.invoke("captures:notes:save", captureId, notes),
   renameCapture: (captureId, title) => ipcRenderer.invoke("captures:rename", captureId, title),
+  getNativeCameraControls: (cameraName) => ipcRenderer.invoke("camera-controls:get", cameraName),
+  setNativeCameraControl: (deviceIndex, controlId, value) => ipcRenderer.invoke("camera-controls:set", deviceIndex, controlId, value),
   onAgentCaptureRequest: (callback) => {
     const listener = (_event, requestId, options) => callback(requestId, options);
     ipcRenderer.on("agent:capture-request", listener);

@@ -22,6 +22,9 @@ const api: FrameBenchApi = {
   listCaptures: () => ipcRenderer.invoke("captures:list"),
   saveCaptureNotes: (captureId: string, notes: string) => ipcRenderer.invoke("captures:notes:save", captureId, notes),
   renameCapture: (captureId: string, title: string) => ipcRenderer.invoke("captures:rename", captureId, title),
+  getNativeCameraControls: (cameraName: string | null) => ipcRenderer.invoke("camera-controls:get", cameraName),
+  setNativeCameraControl: (deviceIndex: number, controlId: string, value: number | boolean) =>
+    ipcRenderer.invoke("camera-controls:set", deviceIndex, controlId, value),
   onAgentCaptureRequest: (callback: (requestId: string, options: AgentCaptureOptions) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, requestId: string, options: AgentCaptureOptions) => callback(requestId, options);
     ipcRenderer.on("agent:capture-request", listener);

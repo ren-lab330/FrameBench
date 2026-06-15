@@ -8,6 +8,7 @@ FrameBench stores all project data inside the selected project folder under `.fr
 
 - Select a project folder and initialize `.framebench/`.
 - Use a USB camera for live preview.
+- Adjust supported native USB camera controls on macOS, including exposure, focus, brightness, contrast, saturation, gamma, sharpness, and white balance when reported by the camera.
 - Draw, resize, rename, lock, delete, and undo-delete rectangular labels.
 - Take manual captures from the UI.
 - Take manual burst captures from the UI with count, interval, and label summary controls.
@@ -127,6 +128,8 @@ npm run dist
 ```
 
 See [docs/distribution.md](docs/distribution.md) for platform notes and release metadata.
+
+Native camera controls are currently implemented for macOS UVC cameras. Windows and Linux packaging remains configured, but their native camera-control backends are not implemented yet.
 
 ## Release Checks
 

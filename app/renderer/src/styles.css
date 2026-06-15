@@ -163,6 +163,22 @@ button {
   color: #d6dde6;
 }
 
+.cameraControlToggle {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.iconButton {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 6px;
+  background: #1a212b;
+  color: #c6d0db;
+  cursor: pointer;
+}
+
 .dangerButton {
   width: 100%;
   background: #2a171a;
@@ -481,8 +497,74 @@ textarea:disabled {
   line-height: 1.45;
 }
 
+.nativeControlPanel {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #202833;
+  border-radius: 7px;
+  background: #111720;
+}
+
+.nativeControlHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #d6dde6;
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.nativeControlPanel p {
+  margin: 0;
+  color: #8b98a7;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.nativeControlList {
+  display: grid;
+  gap: 12px;
+}
+
+.nativeControlRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #8b98a7;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.nativeControlRow.stacked {
+  display: grid;
+  align-items: stretch;
+  justify-content: stretch;
+  gap: 7px;
+}
+
+.nativeControlRow input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #f2c14e;
+}
+
+.nativeNumberControl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px;
+  gap: 8px;
+}
+
+.nativeNumberControl input[type="range"] {
+  padding: 0;
+  accent-color: #f2c14e;
+}
+
 select,
-input,
+input:not([type="checkbox"]),
 textarea {
   width: 100%;
   border: 1px solid #263140;
@@ -493,7 +575,7 @@ textarea {
 }
 
 select,
-input {
+input:not([type="checkbox"]) {
   height: 34px;
   padding: 0 10px;
 }

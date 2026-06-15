@@ -1,6 +1,6 @@
 {
   "name": "framebench",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local camera capture and labeling tool for coding agents working on hardware.",
   "main": "dist/main/app/main/index.js",
   "type": "module",
@@ -56,6 +56,15 @@
       "dist/**/*",
       "build/icon.png",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/native",
+        "to": "native",
+        "filter": [
+          "**/*"
+        ]
+      }
     ],
     "mac": {
       "icon": "build/icon.icns",

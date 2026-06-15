@@ -28,6 +28,36 @@ export interface ProjectConfig {
   updatedAt: string;
 }
 
+export interface NativeCameraDevice {
+  index: number;
+  vendorProduct: string;
+  locationId: string;
+  uvcVersion: string;
+  name: string;
+}
+
+export interface NativeCameraControl {
+  id: string;
+  label: string;
+  valueKind: "number" | "boolean";
+  minimum?: number;
+  maximum?: number;
+  step?: number;
+  defaultValue?: number | boolean;
+  currentValue: number | boolean;
+  typeDescription: string;
+}
+
+export interface NativeCameraControlsState {
+  supported: boolean;
+  platform: NodeJS.Platform | string;
+  helperAvailable: boolean;
+  message: string;
+  devices: NativeCameraDevice[];
+  matchedDevice: NativeCameraDevice | null;
+  controls: NativeCameraControl[];
+}
+
 export interface CaptureImage {
   name: string;
   dataUrl: string;
@@ -163,6 +193,8 @@ export interface FrameBenchApi {
   listCaptures: () => Promise<HistoryItem[]>;
   saveCaptureNotes: (captureId: string, notes: string) => Promise<CaptureSummary>;
   renameCapture: (captureId: string, title: string) => Promise<CaptureSummary>;
+  getNativeCameraControls: (cameraName: string | null) => Promise<NativeCameraControlsState>;
+  setNativeCameraControl: (deviceIndex: number, controlId: string, value: number | boolean) => Promise<NativeCameraControlsState>;
   onAgentCaptureRequest: (callback: (requestId: string, options: AgentCaptureOptions) => void) => () => void;
   completeAgentCaptureRequest: (requestId: string, result: SaveCaptureRequest | { error: string }) => void;
   onCapturesChanged: (callback: () => void) => () => void;

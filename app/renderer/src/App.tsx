@@ -1,5 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, ChevronDown, Crosshair, FolderOpen, Images, Lock, Maximize2, Plus, Radio, RotateCcw, Unlock, X, Trash2 } from "lucide-react";
+import {
+  Camera,
+  ChevronDown,
+  Crosshair,
+  FolderOpen,
+  Images,
+  Lock,
+  Maximize2,
+  Plus,
+  Radio,
+  RefreshCw,
+  RotateCcw,
+  SlidersHorizontal,
+  Trash2,
+  Unlock,
+  X
+} from "lucide-react";
 import { createRoot } from "react-dom/client";
 import type {
   BurstSummary,
@@ -7,6 +23,8 @@ import type {
   FrameBenchApi,
   FrameBenchLabel,
   HistoryItem,
+  NativeCameraControl,
+  NativeCameraControlsState,
   ProjectConfig,
   ProjectState,
   SaveBurstRequest,
@@ -58,12 +76,16 @@ function App() {
   const [labelIdDraft, setLabelIdDraft] = useState("");
   const [undoLabels, setUndoLabels] = useState<FrameBenchLabel[] | null>(null);
   const [cameraRestartToken, setCameraRestartToken] = useState(0);
+  const [nativeControlsOpen, setNativeControlsOpen] = useState(false);
+  const [nativeControls, setNativeControls] = useState<NativeCameraControlsState | null>(null);
+  const [nativeControlPending, setNativeControlPending] = useState<string | null>(null);
   const [drag, setDrag] = useState<DragState>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
 
   const selectedLabel = labels.find((label) => label.id === selectedId) ?? null;
   const selectedItem = captures.find((capture) => capture.id === selectedCaptureId) ?? null;
+  const selectedDevice = devices.find((device) => device.deviceId === selectedDeviceId) ?? null;
 
   useEffect(() => {
     setLabelIdDraft(selectedLabel?.id ?? "");
@@ -137,6 +159,35 @@ function App() {
     }, 200);
     return () => window.clearTimeout(timeout);
   }, [project, selectedDeviceId]);
+
+  const refreshNativeControls = useCallback(async () => {
+    if (isBrowserPreview) return;
+    const state = await api.getNativeCameraControls(selectedDevice?.label || null);
+    setNativeControls(state);
+  }, [selectedDevice?.label]);
+
+  useEffect(() => {
+    if (!project || !selectedDeviceId || !nativeControlsOpen) return;
+    void refreshNativeControls();
+  }, [nativeControlsOpen, project, refreshNativeControls, selectedDeviceId]);
+
+  const setNativeControl = useCallback(async (control: NativeCameraControl, value: number | boolean) => {
+    const deviceIndex = nativeControls?.matchedDevice?.index;
+    if (deviceIndex === undefined) return;
+    setNativeControlPending(control.id);
+    try {
+      const state = await api.setNativeCameraControl(deviceIndex, control.id, value);
+      setNativeControls(state);
+    } catch (error) {
+      setNativeControls((current) =>
+        current
+          ? { ...current, message: error instanceof Error ? error.message : String(error) }
+          : current
+      );
+    } finally {
+      setNativeControlPending(null);
+    }
+  }, [nativeControls?.matchedDevice?.index]);
 
   useEffect(() => {
     if (!project) return;
@@ -575,6 +626,17 @@ function App() {
                 </option>
               ))}
             </select>
+            <button className="secondaryButton cameraControlToggle" onClick={() => setNativeControlsOpen((open) => !open)}>
+              <SlidersHorizontal size={16} /> Native Controls
+            </button>
+            {nativeControlsOpen && (
+              <NativeCameraControlsPanel
+                state={nativeControls}
+                pendingControlId={nativeControlPending}
+                onRefresh={refreshNativeControls}
+                onSetControl={setNativeControl}
+              />
+            )}
           </section>
 
           <section>
@@ -825,6 +887,135 @@ function historyThumb(item: HistoryItem): string | null {
   return item.samples[0]?.fullImage ?? null;
 }
 
+function NativeCameraControlsPanel({
+  state,
+  pendingControlId,
+  onRefresh,
+  onSetControl
+}: {
+  state: NativeCameraControlsState | null;
+  pendingControlId: string | null;
+  onRefresh: () => void;
+  onSetControl: (control: NativeCameraControl, value: number | boolean) => void;
+}) {
+  return (
+    <div className="nativeControlPanel">
+      <div className="nativeControlHeader">
+        <span>{state?.matchedDevice?.name ?? "Camera controls"}</span>
+        <button className="iconButton" onClick={onRefresh} title="Refresh controls">
+          <RefreshCw size={14} />
+        </button>
+      </div>
+      {!state ? (
+        <p>Open or refresh to probe native camera controls.</p>
+      ) : !state.supported ? (
+        <p>{state.message}</p>
+      ) : !state.helperAvailable ? (
+        <p>{state.message}</p>
+      ) : state.controls.length === 0 ? (
+        <p>{state.message}</p>
+      ) : (
+        <div className="nativeControlList">
+          {state.controls.map((control) => (
+            <NativeCameraControlField
+              key={control.id}
+              control={control}
+              disabled={pendingControlId === control.id}
+              onSetControl={onSetControl}
+            />
+          ))}
+        </div>
+      )}
+      {state?.message && state.controls.length > 0 && <p>{state.message}</p>}
+    </div>
+  );
+}
+
+function NativeCameraControlField({
+  control,
+  disabled,
+  onSetControl
+}: {
+  control: NativeCameraControl;
+  disabled: boolean;
+  onSetControl: (control: NativeCameraControl, value: number | boolean) => void;
+}) {
+  const [draftValue, setDraftValue] = useState(control.currentValue);
+
+  useEffect(() => {
+    setDraftValue(control.currentValue);
+  }, [control.currentValue]);
+
+  if (control.valueKind === "boolean") {
+    return (
+      <label className="nativeControlRow">
+        <span>{control.label}</span>
+        <input
+          type="checkbox"
+          checked={Boolean(control.currentValue)}
+          disabled={disabled}
+          onChange={(event) => onSetControl(control, event.target.checked)}
+        />
+      </label>
+    );
+  }
+
+  if (control.id === "auto-exposure-mode") {
+    return (
+      <label className="nativeControlRow stacked">
+        <span>{control.label}</span>
+        <select
+          value={String(control.currentValue)}
+          disabled={disabled}
+          onChange={(event) => onSetControl(control, Number(event.target.value))}
+        >
+          <option value="1">Manual</option>
+          <option value="8">Auto</option>
+          {control.currentValue !== 1 && control.currentValue !== 8 && (
+            <option value={String(control.currentValue)}>Current: {String(control.currentValue)}</option>
+          )}
+        </select>
+      </label>
+    );
+  }
+
+  const numericValue = typeof draftValue === "number" ? draftValue : 0;
+  const hasRange = control.minimum !== undefined && control.maximum !== undefined;
+
+  return (
+    <label className="nativeControlRow stacked">
+      <span>{control.label}</span>
+      <div className="nativeNumberControl">
+        {hasRange && (
+          <input
+            type="range"
+            min={control.minimum}
+            max={control.maximum}
+            step={control.step || 1}
+            value={numericValue}
+            disabled={disabled}
+            onChange={(event) => setDraftValue(Number(event.target.value))}
+            onPointerUp={(event) => onSetControl(control, Number((event.currentTarget as HTMLInputElement).value))}
+          />
+        )}
+        <input
+          type="number"
+          min={control.minimum}
+          max={control.maximum}
+          step={control.step || 1}
+          value={numericValue}
+          disabled={disabled}
+          onChange={(event) => setDraftValue(Number(event.target.value))}
+          onBlur={(event) => onSetControl(control, Number(event.currentTarget.value))}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.currentTarget.blur();
+          }}
+        />
+      </div>
+    </label>
+  );
+}
+
 function applyProjectConfig(
   config: ProjectConfig | null,
   setSelectedDeviceId: (value: string) => void,
@@ -1068,6 +1259,24 @@ function getFrameBenchApi(): FrameBenchApi {
       previewCaptures = previewCaptures.map((capture) => (capture.id === captureId ? { ...capture, title } : capture));
       return previewCaptures.find((capture) => capture.id === captureId) as CaptureSummary;
     },
+    getNativeCameraControls: async () => ({
+      supported: false,
+      platform: "browser",
+      helperAvailable: false,
+      message: "Native camera controls are available only in the Electron app.",
+      devices: [],
+      matchedDevice: null,
+      controls: []
+    }),
+    setNativeCameraControl: async () => ({
+      supported: false,
+      platform: "browser",
+      helperAvailable: false,
+      message: "Native camera controls are available only in the Electron app.",
+      devices: [],
+      matchedDevice: null,
+      controls: []
+    }),
     onAgentCaptureRequest: () => () => undefined,
     completeAgentCaptureRequest: () => undefined,
     onCapturesChanged: () => () => undefined

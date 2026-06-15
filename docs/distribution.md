@@ -82,10 +82,26 @@ macOS notarization note: signing can succeed locally without notarization. Publi
 Current release metadata lives in `package.json`:
 
 - `name`: `framebench`
-- `version`: `0.1.0`
+- `version`: `0.1.1`
 - `productName`: `FrameBench`
 - `appId`: `app.framebench.desktop`
 - `artifactName`: `${productName}-${version}-${os}-${arch}.${ext}`
+
+## Native Camera Controls
+
+FrameBench 0.1.1 bundles a macOS UVC helper at:
+
+```text
+resources/native/macos/uvc-util
+```
+
+The helper is copied into packaged apps as an Electron `extraResource`, so it remains executable outside `app.asar`. The helper is MIT-licensed; its license is included beside the binary.
+
+Current backend status:
+
+- macOS: UVC controls through the bundled helper.
+- Linux: backend not implemented yet; V4L2 is the expected path.
+- Windows: backend not implemented yet; DirectShow or Media Foundation is the expected path.
 
 ## CLI Distribution
 

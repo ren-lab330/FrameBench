@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { setCaptureRequester, setCapturesChangedNotifier, startAgentServer } from "./agentServer.js";
+import { getNativeCameraControls, setNativeCameraControl } from "./cameraControls.js";
 import { listCaptures, renameCapture, saveBurst, saveCapture, saveCaptureNotes } from "./captures.js";
 import { chooseProject, getCurrentProjectState, loadLabels, loadProjectConfig, saveLabels, updateProjectConfig } from "./project.js";
 import type { AgentCaptureOptions, SaveBurstRequest, SaveCaptureRequest } from "../../shared/types.js";
@@ -77,6 +78,8 @@ app.whenReady().then(async () => {
   ipcMain.handle("captures:list", listCaptures);
   ipcMain.handle("captures:notes:save", (_event, captureId, notes) => saveCaptureNotes(captureId, notes));
   ipcMain.handle("captures:rename", (_event, captureId, title) => renameCapture(captureId, title));
+  ipcMain.handle("camera-controls:get", (_event, cameraName) => getNativeCameraControls(cameraName));
+  ipcMain.handle("camera-controls:set", (_event, deviceIndex, controlId, value) => setNativeCameraControl(deviceIndex, controlId, value));
   ipcMain.on("agent:capture-result", (_event, requestId, result: SaveCaptureRequest | { error: string }) => {
     const pending = pendingCaptures.get(requestId);
     if (!pending) return;
